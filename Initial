@@ -1,0 +1,117 @@
+
+
+/*
+ * We need to read the analog value across the resistors. Assign an ADC for the same.
+ * The battery voltage level also needs to be read. Assign another ADC for reading the battery voltage level.
+ */
+
+const int brightness_adc = A0;        // ADC to read the analog signal in the resistor
+const int battery_adc = A1;         // ADC to read the battery voltage
+
+
+/*
+ * The LED needs to be connected to a digital pin.
+ */
+
+const int  LED_Pin = 3;             // The LED is connected to the digital pin 3 ~ because it is PWM enabled.  PWM is required for controlling the brightness of the LED.
+
+
+/*
+ * The values read by the ADCs have to be stored in variables. Declare the variables holding the values read by the ADCs
+ */
+
+int brightness_value;                // The ADC reading the analog signal in the resistor stores it in this variable
+int Battery_Voltage;                // The ADC reading the analog signal in the resistor stores it in this variable
+int Brightness_Level;
+
+
+void setup() 
+{
+ 
+  pinMode(brightness_adc,INPUT);          // The ADC for reading the resistor analog signal is declared as an INPUT GPIO
+  pinMode(battery_adc,INPUT);             // The ADC for reading the battery voltage analog signal is declared as an INPUT GPIO
+  pinMode(LED_Pin,OUTPUT);                // The LED pin is declared as an OUTPUT GPIO
+
+  //Serial.begin(9600);
+}
+
+
+void loop() 
+{
+ 
+  brightness_value = analogRead(brightness_adc);        // The analog value at the resistor is read using the ADC
+  
+  
+  //Serial.print("/n Brightness ADC value");
+  //Serial.print(brightness_value);
+  
+  
+  Battery_Voltage = analogRead(battery_adc);            // The battery voltage is read using the ADC
+  
+  
+  //Serial.print("/n Battery Voltage ADC value");
+  //Serial.print(Battery_Voltage);
+
+  Low_Battery_Voltage();                                // Low battery voltage detection and alert function  
+
+  LED_Brightness_Control();                             // LED brightness control function         
+       
+}
+
+
+
+/*
+ * Low Battery voltage detection and alert
+ * 
+ */
+
+void Low_Battery_Voltage()
+{
+  int critical_voltage = 1.8;
+
+  /*
+   * The battery voltage read by the ADC needs to be converted to actual voltage.
+   * This is done using the following formula
+   * 
+   *          Resolution of ADC/System Voltage = ADC Reading/Analog Voltage Measured
+   *          
+   *          The Resolution of ADC is (2^10)-1 = 1023 as we have a 10 bit ADC in Arduino Uno
+   *          The System Voltage is the maximum possible voltage ~ here it is 3.3 V
+   *          The ADC reading is the value stored in the "Battery_Voltage"
+   *          The Analog Voltage Measured is the current voltage of the battery that needs to be measured
+   *          
+   * 
+   */
+
+  int current_battery_voltage = (Battery_Voltage*3.3)/1023;
+
+  if(current_battery_voltage <= critical_voltage);               // check if the voltage of battery is lower than the critical value
+  {
+    digitalWrite(LED_Pin,HIGH);
+    delay(500);
+    digitalWrite(LED_Pin,LOW);                                // if the voltage of battery is lower than critical, blink the LED  
+  }
+ 
+}
+
+
+/*
+ * LED Brightness control
+ * 
+ */
+
+
+void LED_Brightness_Control()
+{
+
+  // brightness_value is the ADC value of the ADC recording the resistance analog value
+  
+  Brightness_Level = map(brightness_value, 0, 1023, 0, 255);        // The required brightness level recorded by the ADC is 
+                                                                    // mapped to the value between 0 and 255
+  analogWrite(LED_Pin,Brightness_Level);                            
+  
+}
+
+
+
+
