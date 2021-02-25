@@ -46,7 +46,7 @@ void loop()
   //Serial.print(brightness_value);
   
   
-  Battery_Voltage = analogRead(battery_adc);            // The battery voltage is read using the ADC
+  //Battery_Voltage = analogRead(battery_adc);            // The battery voltage is read using the ADC
   
   
   //Serial.print("/n Battery Voltage ADC value");
@@ -67,6 +67,7 @@ void loop()
 
 void Low_Battery_Voltage()
 {
+  Battery_Voltage = analogRead(battery_adc);            // The battery voltage is read using the ADC
   int critical_voltage = 1.8;
 
   /*
@@ -87,12 +88,41 @@ void Low_Battery_Voltage()
 
   if(current_battery_voltage <= critical_voltage);               // check if the voltage of battery is lower than the critical value
   {
-    digitalWrite(LED_Pin,HIGH);
-    delay(500);
-    digitalWrite(LED_Pin,LOW);                                // if the voltage of battery is lower than critical, blink the LED  
+    LED_Blink();                                                 // if the voltage of battery is lower than critical, blink the LED  
   }
  
 }
+
+/*
+ * LED Blink function
+ */
+ 
+void LED_Blink()                                                // declaring the LED_Blink function
+{
+  int LED_State = LOW;                                          // initializing the state of LED
+  unsigned long Previous_time_reading = 0;                      // variable to compare the time reading
+  unsigned long Current_time_reading = millis();                // the current time reading is recorded
+  /*
+   * The delay() is mimicked here. The time reading is taken continuously and when the time gap is 1 sec the Previous_time_reading is over-written with Current_time_reading
+   * And the LED is toggled between HIGH and LOW.
+   */
+  if((Current_time_reading-Previous_time_reading)>=1000)        // check if the time gap between previous reading and current reading is 1 s
+  {
+    Previous_time_reading = Current_time_reading;               // over-write the previous reading with the current value
+    if(LED_State == LOW)                                        // check the status of LED
+    {
+      LED_State = HIGH;                                         // toggle the state of LED
+    }
+    else
+    {
+      LED_State = LOW;
+    }
+  }
+  
+}
+
+
+
 
 
 /*
