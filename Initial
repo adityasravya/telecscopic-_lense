@@ -7,6 +7,8 @@ const int brightness_adc = A0;        // ADC to read the analog signal in the re
 const int battery_adc = A1;         // ADC to read the battery voltage
 
 
+int i;                                // variable for looping through the lookup table
+
 /*
  * The LED needs to be connected to a digital pin.
  */
@@ -21,6 +23,55 @@ const int  LED_Pin = 3;             // The LED is connected to the digital pin 3
 int brightness_value;                // The ADC reading the analog signal in the resistor stores it in this variable
 int Battery_Voltage;                // The ADC reading the analog signal in the resistor stores it in this variable
 int Brightness_Level;
+
+
+/*
+ * LED Brightness Lookup Table
+ * 
+ * A lookup table is to be made so that the microcontroller can cross-check the analog input and required brightness.
+ * The lookup table contains the standard ADC values (lower limit and higher limit) for each resistance and corresponding value mapped to (255, 20) range.
+ * Any ADC values within the lower and higher limits will be mapped to the corresponding brightness level by refering the lookup table.
+ */
+
+
+/*
+ * LED Brightness Lookup Table Setup
+ */
+
+typedef struct                      // Define a structure with 3 datasets, the lower limit of ADC value, higher limit of ADC value and the value mapped to the (255, 20) range
+{
+  /*
+   * Each of the entry in the Brightness_Control_Lookup table will have min_ADC_value, which holds the lower limit of ADC value, 
+   * max_ADC_value, which holds the higher limit of ADC value, and mapped_value, which holds the equivalent mapped value to the
+   * range (255, 0)
+   */
+   
+    int min_ADC_value;              
+    int max_ADC_value;
+    int mapped_value;
+    
+}Brightness_Control_Lookup;
+
+
+/*
+ * Brightness_Control_Lookup Table Data
+ */
+
+Brightness_Control_Lookup Data_Table[9] = 
+{
+{367, 376, 255},
+{380, 390, 228},
+{418, 429, 146},
+{430, 442, 115},
+{443, 451, 96},
+{452, 462, 77},
+{463, 480, 31},
+{481, 483, 25},
+{484, 484, 20},
+};
+
+
+
 
 
 void setup() 
@@ -141,13 +192,37 @@ void LED_Blink()                                                // declaring the
  */
 
 
+/*
+ * LED Brightness control
+ * 
+ */
+
+
 void LED_Brightness_Control()
 {
 
+  
+  
+  for (i=0; i<9; i++)
+  {
+    if (brightness_value>=Data_Table[i].min_ADC_value && brightness_value<=Data_Table[i].max_ADC_value)
+    {
+      Brightness_Level = Data_Table[i].mapped_value;
+      break;
+    }
+  }
+  
+  
+  
   // brightness_value is the ADC value of the ADC recording the resistance analog value
   
-  Brightness_Level = map(brightness_value, 0, 1023, 0, 255);        // The required brightness level recorded by the ADC is 
+  //Brightness_Level = map(brightness_value, 0, 1023, 0, 255);        // The required brightness level recorded by the ADC is 
                                                                     // mapped to the value between 0 and 255
+  
+  Serial.print("Brightness Level mapped ");
+  Serial.println(Brightness_Level);
+
+  
   analogWrite(LED_Pin,Brightness_Level);                            
   
 }
