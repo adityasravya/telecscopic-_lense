@@ -1,0 +1,92 @@
+// ATtiny13 Battery Charger Indicator for one LiIon element
+// It will indicate the capacity of the charged battery using LEDs connected on PB0 - PB3 pins
+// Voltage is on PB4 through a 1:4 divider
+
+#include <avr/io.h> 
+#define F_CPU 1200000UL 
+#include <util/delay.h> 
+
+#define LED1_ON() 	PORTB|=(1<<PB0)
+
+#define LED1_OFF()	PORTB&=~(1<<PB0)
+
+static inline void delay100msec()
+{
+	unsigned int i;
+	for (i=0; i<100; i++) { 
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	   _delay_us(100);
+	}
+	
+	return;
+}
+
+int ReadADC();
+
+int val = 0;
+
+int main (void) 
+{ 
+	DDRB |= (1 << DDB0);	//seteaza pinul 5 (PB0) ca iesire
+	DDRB |= (1 << DDB1);	//seteaza pinul 6 (PB1) ca iesire
+	DDRB |= (1 << DDB2);	//seteaza pinul 7 (PB2) ca iesire
+	DDRB |= (1 << DDB3);	//seteaza pinul 2 (PB3) ca iesire
+	
+	DDRB &= ~(1 << DDB4); 
+	PORTB &= ~(1 << PORTB4);
+
+	//ADMUX |= (1 << REFS0);	// Internal 1.1V as Reference (ADMUX nu merge setat asa)
+	//ADMUX |= (1 << MUX1);		// ADC2 PB.4 (ADMUX nu merge setat asa)
+	ADMUX = 0b01000010;			// MUX1..0 = 10
+	
+	ADCSRA |= (1 << ADEN);		// Enable ADC    
+	
+	LED1_OFF();
+	
+	
+	while(1)
+	{
+	int i, avg =30;
+	unsigned int avg_adc;
+		for(i=0;i<avg;i++)
+		{
+			val+ = ReadADC();
+		}
+		avg_adc = val/30
+	
+	if (val <= 300)
+	{
+		LED1_ON();
+		delay100msec();
+	}
+	else
+		LED1_OFF();
+	
+	}
+
+
+
+	return 1;    
+} 
+
+
+int ReadADC() 
+{ 
+	//ADMUX |= (1 << REFS0);	// Internal 1.1V as Reference (ADMUX nu merge setat asa)
+	//ADMUX = (1 << MUX1);		// ADC2 PB.4 (ADMUX nu merge setat asa)
+	ADMUX = 0b01000010;			// MUX1..0 = 10
+	
+	ADCSRA |= (1 << ADSC);		// Start Converstion 
+
+	while ((ADCSRA & 0x40) !=0) {}; //wait for conv complete 
+
+	return ADC; 
+} 
